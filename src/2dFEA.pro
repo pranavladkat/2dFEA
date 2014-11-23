@@ -8,5 +8,8 @@ SOURCES += main.cpp
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_CXX = mpicxx
 
+HEADERS += \
+    mesh.hpp
+
 
 

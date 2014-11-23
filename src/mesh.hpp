@@ -3,10 +3,17 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
+#include <fstream>
+#include <cassert>
+#include <iomanip>
 
 using namespace std;
 
 
+/*
+ * CLASS NODE -> contains mesh coordinate details
+ */
 class Node{
   friend class Mesh;
 private:
@@ -15,16 +22,22 @@ private:
 };
 
 
+/*
+ * CLASS FACE -> contains mesh faces and its connected nodes
+ */
 class Face{
   friend class Mesh;
 private:
   typedef enum {TRI, QUAD} FaceType;
   FaceType Ftype;
   int FaceID;
-  int N1, N2, N3, N4;
+  vector<int> nodes;
 };
 
 
+/*
+ * CLASS BOUNDARY -> identifies boundary nodes
+ */
 class Boundary{
   friend class Mesh;
 private:
@@ -33,15 +46,142 @@ private:
   string name;
   BoundaryType BType;
   int size;
-  int* BoundaryElement;
-
+  vector<int> nodes;
 };
 
 
+/*
+ * CLASS MESH -> Reads the mesh file and populates mesh data
+ */
 class Mesh{
 
+private:
+  vector<Node> node;
+  vector<Face> face;
+  vector<Boundary> boundary;
+  bool set_filename;
+  string filename;
+
+public:
+
+  Mesh();
+  Mesh(string const& a);
+  void SetMeshFilename(string const& a);
+  void ReadMeshFile();
 
 
 };
+
+
+/************* Function Definitions for Class Mesh ******************/
+
+Mesh::Mesh(){
+  set_filename = false;
+}
+
+Mesh::Mesh(const string &a){
+  SetMeshFilename(a);
+}
+
+void Mesh::SetMeshFilename(const string &a){
+  filename = a;
+  set_filename = true;
+  //cout << "Mesh Filename = " << filename << endl;
+}
+
+
+void Mesh::ReadMeshFile(){
+
+  /* assert if input filename is set */
+  assert(set_filename);
+
+  ifstream mfile(filename);
+  assert(mfile.is_open());
+
+  string parameter;
+
+  while(!mfile.eof()){
+
+    mfile >> parameter;
+    cout << parameter << endl;
+    if(parameter.compare("#Nodes") == 0){
+      for(;;){
+        Node read_node;
+        mfile >> read_node.NodeID;
+        if(read_node.NodeID == -1){
+          break;
+        }
+        mfile >> read_node.x >> read_node.y >> read_node.z;
+        node.push_back(read_node);
+        cout << setw(12) << read_node.x << setw(12) << read_node.y << setw(12) << read_node.z << endl;
+      }
+    }
+
+    if(parameter.compare("#Elements") == 0){
+
+      for(;;){
+        Face read_face;
+        int check, temp;
+        mfile >> check;
+        if(check == -1){
+          break;
+        }
+        mfile >> temp >> temp >> temp >> temp >> temp >> temp >> temp >> temp >> temp;
+        mfile >> read_face.FaceID;
+        mfile >> temp; read_face.nodes.push_back(temp);
+        mfile >> temp; read_face.nodes.push_back(temp);
+        mfile >> temp; read_face.nodes.push_back(temp);
+        mfile >> temp; read_face.nodes.push_back(temp);
+
+        assert(read_face.nodes[2] != read_face.nodes[3]);
+        read_face.Ftype = Face::QUAD;
+
+        face.push_back(read_face);
+
+        cout << setw(12) << read_face.FaceID << setw(12) << read_face.nodes[0] << setw(12) << read_face.nodes[1]
+             << setw(12) << read_face.nodes[2] << setw(12) << read_face.nodes[3] << endl;
+      }
+    }
+
+    if(parameter.compare("#NamedSelection") == 0){
+
+      Boundary read_b;
+      mfile >> read_b.name;
+      string btype;
+      mfile >> btype;
+
+      if(btype.compare("NODE")==0){
+        read_b.BType = Boundary::NODE;
+      }else{
+        cerr << "ERROR in Boundary "<< read_b.name << endl;
+      }
+
+      mfile >> read_b.size;
+      for(int i = 0; i < read_b.size; i++){
+        int buf;
+        mfile >> buf;
+        read_b.nodes.push_back(buf);
+        cout << read_b.nodes[i] << "\t";
+      }
+      cout << endl;
+
+      boundary.push_back(read_b);
+    }
+
+    if(parameter.compare("#End") == 0 || parameter.compare("#end") == 0){
+      break;
+    }
+
+  } // end while
+
+} // end mesh read function
+
+
+
+
+
+
+
+
 
 #endif // MESH_HPP

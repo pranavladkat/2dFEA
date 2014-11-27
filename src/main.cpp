@@ -1,7 +1,7 @@
 #include <iostream>
 #include "mesh.hpp"
 #include "material.hpp"
-#include "cblas.h"
+#include "preprocessor.hpp"
 
 using namespace std;
 
@@ -16,6 +16,11 @@ int main(int argc, char* argv[]){
   steel.Compute_Elastic_Stiffness();
   steel.Print_Elastic_Stiffness();
 
+  PreProcessor pre(&mesh,&steel);
+  pre.Set_quadrature_rule(Q2D_2point);
+  pre.Create_Quadrature_Objects();
+
+  pre.temp();
 
   cout << "Hello Pranav!" << endl;
 

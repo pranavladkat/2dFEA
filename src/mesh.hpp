@@ -54,20 +54,21 @@ private:
  * CLASS MESH -> Reads the mesh file and populates mesh data
  */
 class Mesh{
-
+  friend class PreProcessor;
 private:
   vector<Node> node;
   vector<Face> face;
   vector<Boundary> boundary;
   bool set_filename;
   string filename;
+  bool isQuadPresent, isTriPresent;
 
 public:
 
   typedef enum {MATLAB,PLOT3D} OUTPUT_MESH_FORMAT;
   Mesh();
-  Mesh(string const& a);
-  void SetMeshFilename(string const& a);
+  Mesh(string const&);
+  void SetMeshFilename(string const&);
   void ReadMeshFile();
   void ValidateMesh();
   void WriteMesh(OUTPUT_MESH_FORMAT const&);
@@ -80,10 +81,14 @@ public:
 
 Mesh::Mesh(){
   set_filename = false;
+  isQuadPresent = false;
+  isTriPresent = false;
 }
 
 Mesh::Mesh(const string &a){
   SetMeshFilename(a);
+  isQuadPresent = false;
+  isTriPresent = false;
 }
 
 void Mesh::SetMeshFilename(const string &a){
@@ -138,6 +143,14 @@ void Mesh::ReadMeshFile(){
 
         assert(read_face.nodes[2] != read_face.nodes[3]);
         read_face.Ftype = Face::QUAD;
+        if(read_face.Ftype == Face::QUAD && !isQuadPresent){
+          isQuadPresent = true;
+          cout << "Quad Face is present" << endl;
+        }
+        if(read_face.Ftype == Face::TRI && !isTriPresent){
+          isTriPresent = true;
+          cout << "Tri Face is present" << endl;
+        }
 
         face.push_back(read_face);
 
@@ -183,6 +196,9 @@ void Mesh::ValidateMesh(){
   cout << "Number of nodes = " << node.size() << endl;
   cout << "Number of faces = " << face.size() << endl;
   cout << "Number of boundaries = " << boundary.size() << endl;
+  cout << "size of nodes: " << sizeof(Node)*node.size() << " bytes" << endl;
+  cout << "size of faces: " << sizeof(Face)*face.size() << " bytes" << endl;
+  cout << endl;
 }
 
 

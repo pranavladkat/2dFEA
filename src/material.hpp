@@ -8,7 +8,7 @@
 using namespace std;
 
 class Material{
-
+  friend class PreProcessor;
 private:
   double E; // young's modulus
   double nu; // poisson's ratio

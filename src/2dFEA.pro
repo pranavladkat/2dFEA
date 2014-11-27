@@ -12,7 +12,10 @@ QMAKE_CXX = mpicxx
 
 HEADERS += \
 		mesh.hpp \
-		material.hpp
+		material.hpp \
+    preprocessor.hpp \
+    quadrature.hpp \
+    element.hpp
 
 OTHER_FILES += \
 		lapac_example.txt

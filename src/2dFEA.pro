@@ -5,16 +5,17 @@ CONFIG -= qt
 
 SOURCES += main.cpp
 
-LIBS += -llapack
+LIBS += -llapack -lblas
 
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_CXX = mpicxx
 
 HEADERS += \
-		mesh.hpp
+		mesh.hpp \
+		material.hpp
 
 OTHER_FILES += \
-    lapac_example.txt
+		lapac_example.txt
 
 
 

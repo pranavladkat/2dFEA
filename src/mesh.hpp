@@ -64,10 +64,13 @@ private:
 
 public:
 
+  typedef enum {MATLAB,PLOT3D} OUTPUT_MESH_FORMAT;
   Mesh();
   Mesh(string const& a);
   void SetMeshFilename(string const& a);
   void ReadMeshFile();
+  void ValidateMesh();
+  void WriteMesh(OUTPUT_MESH_FORMAT const&);
 
 
 };
@@ -103,7 +106,7 @@ void Mesh::ReadMeshFile(){
   while(!mfile.eof()){
 
     mfile >> parameter;
-    cout << parameter << endl;
+    //cout << parameter << endl;
     if(parameter.compare("#Nodes") == 0){
       for(;;){
         Node read_node;
@@ -113,7 +116,7 @@ void Mesh::ReadMeshFile(){
         }
         mfile >> read_node.x >> read_node.y >> read_node.z;
         node.push_back(read_node);
-        cout << setw(12) << read_node.x << setw(12) << read_node.y << setw(12) << read_node.z << endl;
+        //cout << setw(12) << read_node.x << setw(12) << read_node.y << setw(12) << read_node.z << endl;
       }
     }
 
@@ -138,8 +141,8 @@ void Mesh::ReadMeshFile(){
 
         face.push_back(read_face);
 
-        cout << setw(12) << read_face.FaceID << setw(12) << read_face.nodes[0] << setw(12) << read_face.nodes[1]
-             << setw(12) << read_face.nodes[2] << setw(12) << read_face.nodes[3] << endl;
+        //cout << setw(12) << read_face.FaceID << setw(12) << read_face.nodes[0] << setw(12) << read_face.nodes[1]
+        //     << setw(12) << read_face.nodes[2] << setw(12) << read_face.nodes[3] << endl;
       }
     }
 
@@ -161,10 +164,9 @@ void Mesh::ReadMeshFile(){
         int buf;
         mfile >> buf;
         read_b.nodes.push_back(buf);
-        cout << read_b.nodes[i] << "\t";
+        //cout << read_b.nodes[i] << "\t";
       }
-      cout << endl;
-
+      //cout << endl;
       boundary.push_back(read_b);
     }
 
@@ -173,14 +175,46 @@ void Mesh::ReadMeshFile(){
     }
 
   } // end while
-
+  mfile.close();
 } // end mesh read function
 
 
+void Mesh::ValidateMesh(){
+  cout << "Number of nodes = " << node.size() << endl;
+  cout << "Number of faces = " << face.size() << endl;
+  cout << "Number of boundaries = " << boundary.size() << endl;
+}
 
 
+void Mesh::WriteMesh(OUTPUT_MESH_FORMAT const& output_mesh_format){
 
+  if(output_mesh_format == MATLAB){
 
+    ofstream mfile("mesh.m");
+    assert(mfile.is_open());
+
+    // write x component
+    mfile << "x = [" << endl;
+    for(size_t i = 0; i < node.size(); i++){
+      mfile << node[i].x << endl;
+    }
+    mfile << "];" << endl;
+    // write y component
+    mfile << "y = [" << endl;
+    for(size_t i = 0; i < node.size(); i++){
+      mfile << node[i].y << endl;
+    }
+    mfile << "];" << endl;
+    // write z component
+    mfile << "z = [" << endl;
+    for(size_t i = 0; i < node.size(); i++){
+      mfile << node[i].z << endl;
+    }
+    mfile << "];" << endl;
+
+  } // end matlab mesh format write
+
+}  // end writemesh function
 
 
 

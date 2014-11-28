@@ -80,7 +80,7 @@ void PreProcessor :: Compute_Element_properties(){
   if(mesh->face[0].Ftype == Face::QUAD){
     elem = new Quad4(Quad_Quad,mesh->node,mesh->face[0]);
   }
-  elem->Compute_mapping_coeff();
+  elem->Element_setup();
 
  element.push_back(elem);
 

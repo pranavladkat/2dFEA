@@ -34,15 +34,10 @@ public:
   virtual void Element_setup() = 0;
   virtual void Compute_mapping_coeff() = 0;
   virtual void Compute_Shape_Function() = 0;
-  //virtual void Compute_Jacobian() = 0;
-  virtual void Compute_dx_dxi() = 0;
-  virtual void Compute_dx_deta() = 0;
-//  virtual void Compute_dy_dxi(double const&,double const&) = 0;
-//  virtual void Compute_dy_deta(double const&,double const&) = 0;
-//  virtual void Compute_dxi_dx(double const&,double const&) = 0;
-//  virtual void Compute_dxi_dy(double const&,double const&) = 0;
-//  virtual void Compute_deta_dx(double const&,double const&) = 0;
-//  virtual void Compute_deta_dy(double const&,double const&) = 0;
+  virtual void Compute_dX_dXI() = 0;
+  virtual void Compute_Jacobian() = 0;
+  virtual void Compute_dXI_dX() = 0;
+
 
 };
 
@@ -55,20 +50,14 @@ protected:
   const vector<Node> node;
   const Face face;
 public:
-  Quad4(Quadrature const*,const vector<Node>&, const Face&);
+  Quad4(Quadrature const*, const vector<Node>&, const Face&);
   ~Quad4();
   virtual void Element_setup();
   virtual void Compute_mapping_coeff();
   virtual void Compute_Shape_Function();
-  //virtual void Compute_Jacobian();
-  virtual void Compute_dx_dxi();
-  virtual void Compute_dx_deta();
-//  virtual void Compute_dy_dxi(double const&,double const&);
-//  virtual void Compute_dy_deta(double const&,double const&);
-//  virtual void Compute_dxi_dx(double const&,double const&);
-//  virtual void Compute_dxi_dy(double const&,double const&);
-//  virtual void Compute_deta_dx(double const&,double const&);
-//  virtual void Compute_deta_dy(double const&,double const&);
+  virtual void Compute_dX_dXI();
+  virtual void Compute_Jacobian();
+  virtual void Compute_dXI_dX();
 
 };
 
@@ -116,6 +105,27 @@ Element :: ~Element(){
   if(dx_deta != NULL){
     delete [] dx_deta;
   }
+  if(dy_dxi != NULL){
+    delete [] dy_dxi;
+  }
+  if(dy_deta != NULL){
+    delete [] dy_deta;
+  }
+  if(dxi_dx != NULL){
+    delete [] dxi_dx;
+  }
+  if(dxi_dy != NULL){
+    delete [] dxi_dy;
+  }
+  if(deta_dx != NULL){
+    delete [] deta_dx;
+  }
+  if(deta_dy != NULL){
+    delete [] deta_dy;
+  }
+  if(J != NULL){
+    delete [] J;
+  }
 }
 
 Quad4::Quad4(Quadrature const* quad, const vector<Node>& n, const Face& f)
@@ -143,12 +153,13 @@ Quad4::~Quad4(){
 
 
 
-void Quad4 ::Element_setup(){
+void Quad4 :: Element_setup(){
   assert(Quad != NULL);
   Compute_mapping_coeff();
   Compute_Shape_Function();
-  Compute_dx_dxi();
-  Compute_dx_deta();
+  Compute_dX_dXI();
+  Compute_Jacobian();
+  Compute_dXI_dX();
 }
 
 
@@ -177,8 +188,9 @@ void Quad4 :: Compute_mapping_coeff(){
   for(int i = 0; i < n; i++){
     alpha[i] = solution[0][i];
     beta[i] = solution[1][i];
-    cout << setw(10) << alpha[i] << setw(10) << beta[i] << endl;
+    cout << setw(15) << alpha[i] << setw(15) << beta[i] << endl;
   }
+  cout << endl;
 
 }
 
@@ -209,38 +221,71 @@ void Quad4 :: Compute_Shape_Function(){
     }
     cout << endl;
   }
+  cout << endl;
 
 }
 
 
-void Quad4 :: Compute_dx_dxi(){
+void Quad4 :: Compute_dX_dXI(){
 
-  assert(alpha != NULL || beta != NULL);
-  const int n = Quad->Qpoints();
-  const double* QEta = Quad->QEtapoints();
-  dx_dxi = new double [n];
-
-  cout << "dx_dxi :" << endl;
-  for(int i = 0; i < n; i++){
-    dx_dxi[i] = alpha[1] + alpha[3]*QEta[i];
-    cout << setw(15) << dx_dxi[i];
-  }
-  cout << endl << endl;
-}
-
-
-void Quad4 :: Compute_dx_deta(){
   assert(alpha != NULL || beta != NULL);
   const int n = Quad->Qpoints();
   const double* QXi = Quad->QXipoints();
+  const double* QEta = Quad->QEtapoints();
+  dx_dxi = new double [n];
   dx_deta = new double [n];
+  dy_dxi = new double [n];
+  dy_deta = new double [n];
 
-  cout << "dx_deta :" << endl;
+  cout << setw(15) << "dx_dxi" << setw(15) << "dx_deta" << setw(15) << "dy_dxi" << setw(15) << "dy_deta" << endl;
   for(int i = 0; i < n; i++){
+    dx_dxi[i] = alpha[1] + alpha[3]*QEta[i];
     dx_deta[i] = alpha[2] + alpha[3]*QXi[i];
-    cout << setw(15) << dx_deta[i];
+    dy_dxi[i] = beta[1] + beta[3]*QEta[i];
+    dy_deta[i] = beta[2] + beta[3]*QXi[i];
+    cout << setw(15) << dx_dxi[i] << setw(15) << dx_deta[i]
+         << setw(15) << dy_dxi[i] << setw(15) << dy_deta[i] << endl;
+  }
+  cout << endl;
+}
+
+
+void Quad4 :: Compute_Jacobian(){
+  assert(dx_dxi != NULL || dx_deta != NULL ||dy_dxi != NULL ||dy_deta != NULL);
+  const int n = Quad->Qpoints();
+  J = new double [n];
+
+  cout << "Jacobian :" << endl;
+  for(int i = 0; i < n; i++){
+    J[i] = dx_dxi[i]*dy_deta[i] - dy_dxi[i]*dx_deta[i];
+    cout << setw(15) << J[i];
   }
   cout << endl << endl;
+
+  /* assert positive jacobian */
+  assert(*J > 0);
+}
+
+
+void Quad4 :: Compute_dXI_dX(){
+  assert(dx_dxi != NULL || dx_deta != NULL ||dy_dxi != NULL ||dy_deta != NULL);
+  assert(*J < 1e8);
+  const int n = 4;
+  dxi_dx = new double [n];
+  dxi_dy = new double [n];
+  deta_dx = new double [n];
+  deta_dy = new double [n];
+
+  cout << setw(15) << "dxi_dx" << setw(15) << "dxi_dy" << setw(15) << "deta_dx" << setw(15) << "deta_dy" << endl;
+  for(int i = 0; i < n; i++){
+    dxi_dx[i]  =  dy_deta[i]/J[i];
+    dxi_dy[i]  = -dx_deta[i]/J[i];
+    deta_dx[i] = -dy_dxi[i]/J[i];
+    deta_dy[i] =  dx_dxi[i]/J[i];
+    cout << setw(15) << dxi_dx[i] << setw(15) << dxi_dy[i]
+         << setw(15) << deta_dx[i] << setw(15) << deta_dy[i] << endl;
+  }
+
 }
 
 

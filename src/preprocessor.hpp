@@ -26,7 +26,6 @@ public:
 
   void Set_quadrature_rule(Quadrature_Rule const &);
   void Create_Quadrature_Objects();
-
   void Compute_Element_properties();
 
 
@@ -77,12 +76,13 @@ void PreProcessor :: Create_Quadrature_Objects(){
 void PreProcessor :: Compute_Element_properties(){
 
   Element *elem;
-  if(mesh->face[0].Ftype == Face::QUAD){
-    elem = new Quad4(Quad_Quad,mesh->node,mesh->face[0]);
+  for(size_t i = 0; i <mesh->face.size(); i++){
+    if(mesh->face[i].Ftype == Face::QUAD){
+      elem = new Quad4(Quad_Quad,mesh->node,mesh->face[i]);
+    }
+    elem->Element_setup();
+    element.push_back(elem);
   }
-  elem->Element_setup();
-
- element.push_back(elem);
 
 }
 

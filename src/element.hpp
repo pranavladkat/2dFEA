@@ -36,7 +36,7 @@ public:
   virtual void Compute_Shape_Function() = 0;
   //virtual void Compute_Jacobian() = 0;
   virtual void Compute_dx_dxi() = 0;
-//  virtual void Compute_dx_deta(double const&,double const&) = 0;
+  virtual void Compute_dx_deta() = 0;
 //  virtual void Compute_dy_dxi(double const&,double const&) = 0;
 //  virtual void Compute_dy_deta(double const&,double const&) = 0;
 //  virtual void Compute_dxi_dx(double const&,double const&) = 0;
@@ -62,7 +62,7 @@ public:
   virtual void Compute_Shape_Function();
   //virtual void Compute_Jacobian();
   virtual void Compute_dx_dxi();
-//  virtual void Compute_dx_deta(double const&,double const&);
+  virtual void Compute_dx_deta();
 //  virtual void Compute_dy_dxi(double const&,double const&);
 //  virtual void Compute_dy_deta(double const&,double const&);
 //  virtual void Compute_dxi_dx(double const&,double const&);
@@ -110,6 +110,12 @@ Element :: ~Element(){
   if(Na_data != NULL){
     delete [] Na_data;
   }
+  if(dx_dxi != NULL){
+    delete [] dx_dxi;
+  }
+  if(dx_deta != NULL){
+    delete [] dx_deta;
+  }
 }
 
 Quad4::Quad4(Quadrature const* quad, const vector<Node>& n, const Face& f)
@@ -141,13 +147,15 @@ void Quad4 ::Element_setup(){
   assert(Quad != NULL);
   Compute_mapping_coeff();
   Compute_Shape_Function();
+  Compute_dx_dxi();
+  Compute_dx_deta();
 }
 
 
 
 void Quad4 :: Compute_mapping_coeff(){
 
-  const int n = Quad->Qpoints(), nrhs = 2;
+  int n = Quad->Qpoints(), nrhs = 2;
   int lda = n, ldb = n;
   int info, ipiv[n];
   double solution[2][n];
@@ -165,12 +173,12 @@ void Quad4 :: Compute_mapping_coeff(){
   dgesv_(&n, &nrhs, &mat[0][0], &lda, ipiv, &solution[0][0], &ldb, &info);
   assert(info == 0);
 
-//  cout << "Solution: "<< info << endl;
-//  for(int i = 0; i < n; i++){
-//    alpha[i] = solution[0][i];
-//    beta[i] = solution[1][i];
-//    cout << setw(10) << alpha[i] << setw(10) << beta[i] << endl;
-//  }
+  cout << "Solution: "<< info << endl;
+  for(int i = 0; i < n; i++){
+    alpha[i] = solution[0][i];
+    beta[i] = solution[1][i];
+    cout << setw(10) << alpha[i] << setw(10) << beta[i] << endl;
+  }
 
 }
 
@@ -178,8 +186,8 @@ void Quad4 :: Compute_mapping_coeff(){
 void Quad4 :: Compute_Shape_Function(){
 
   const int n = Quad->Qpoints();
-  double* QXi  = Quad->QXipoints();
-  double* QEta = Quad->QEtapoints();
+  const double* QXi  = Quad->QXipoints();
+  const double* QEta = Quad->QEtapoints();
   Na = new double* [n];
   Na_data = new double [n*n];
   for(int i = 0; i < n; i++){
@@ -194,23 +202,46 @@ void Quad4 :: Compute_Shape_Function(){
     Na[3][i] = 0.25*(1.0-QXi[i])*(1.0+QEta[i]);
   }
 
-//  cout << "Shape Functions:" << endl;
-//  for(int i = 0; i < n; i++){
-//    for(int j = 0; j < n; j++){
-//      cout << setw(12) << Na[i][j];
-//    }
-//    cout << endl;
-//  }
+  cout << "Shape Functions:" << endl;
+  for(int i = 0; i < n; i++){
+    for(int j = 0; j < n; j++){
+      cout << setw(12) << Na[i][j];
+    }
+    cout << endl;
+  }
 
 }
 
 
 void Quad4 :: Compute_dx_dxi(){
+
+  assert(alpha != NULL || beta != NULL);
   const int n = Quad->Qpoints();
+  const double* QEta = Quad->QEtapoints();
   dx_dxi = new double [n];
 
+  cout << "dx_dxi :" << endl;
+  for(int i = 0; i < n; i++){
+    dx_dxi[i] = alpha[1] + alpha[3]*QEta[i];
+    cout << setw(15) << dx_dxi[i];
+  }
+  cout << endl << endl;
 }
 
+
+void Quad4 :: Compute_dx_deta(){
+  assert(alpha != NULL || beta != NULL);
+  const int n = Quad->Qpoints();
+  const double* QXi = Quad->QXipoints();
+  dx_deta = new double [n];
+
+  cout << "dx_deta :" << endl;
+  for(int i = 0; i < n; i++){
+    dx_deta[i] = alpha[2] + alpha[3]*QXi[i];
+    cout << setw(15) << dx_deta[i];
+  }
+  cout << endl << endl;
+}
 
 
 

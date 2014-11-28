@@ -16,6 +16,8 @@ using namespace std;
  */
 class Node{
   friend class Mesh;
+  friend class PreProcessor;
+  friend class Quad4;
 private:
   int NodeID;
   double x,y,z;
@@ -27,6 +29,8 @@ private:
  */
 class Face{
   friend class Mesh;
+  friend class PreProcessor;
+  friend class Quad4;
 private:
   typedef enum {TRI, QUAD} FaceType;
   FaceType Ftype;
@@ -40,6 +44,7 @@ private:
  */
 class Boundary{
   friend class Mesh;
+  friend class PreProcessor;
 private:
   typedef enum {NODE, ELEMENT} BoundaryType;
 

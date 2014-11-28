@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
   pre.Set_quadrature_rule(Q2D_2point);
   pre.Create_Quadrature_Objects();
 
-  pre.temp();
+  pre.Compute_Element_properties();
 
   cout << "Hello Pranav!" << endl;
 

@@ -17,8 +17,6 @@ private:
   const Material *material;
   Quadrature *Quad_Quad, *Quad_Tri;
   vector<Element*> element;
-  Element *elem;
-
   Quadrature_Rule QRule;
 
 public:
@@ -29,7 +27,7 @@ public:
   void Set_quadrature_rule(Quadrature_Rule const &);
   void Create_Quadrature_Objects();
 
-  void temp();
+  void Compute_Element_properties();
 
 
 };
@@ -76,11 +74,15 @@ void PreProcessor :: Create_Quadrature_Objects(){
 
 
 
-void PreProcessor :: temp(){
-  cout << element.size() << endl;
-  elem = new Quad4;
-  element.push_back(elem);
-  cout << element.size() << endl;
+void PreProcessor :: Compute_Element_properties(){
+
+  Element *elem;
+  if(mesh->face[0].Ftype == Face::QUAD){
+    elem = new Quad4(Quad_Quad,mesh->node,mesh->face[0]);
+  }
+  elem->Compute_mapping_coeff();
+
+ element.push_back(elem);
 
 }
 

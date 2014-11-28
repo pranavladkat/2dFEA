@@ -14,18 +14,24 @@ class Quadrature{
 protected:
   int Quadrature_points;
   double *QW, *QXi, *QEta;
+  double **mapping, *mapping_data;
 
 public:
   virtual ~Quadrature();
 
   virtual void Setup_Quadrature() = 0;
   virtual void Print_Quadrature_Info() = 0;
-  int Qpoints() {return Quadrature_points;}
+  int Qpoints() const {return Quadrature_points;}
+  double* QWeights() const {return QW;}
+  double* QXipoints() const {return QXi;}
+  double* QEtapoints() const {return QEta;}
+  double** QMapping() const {return mapping;}
 
 };
 
 
 class Quadrature_2PQuad4 : public Quadrature{
+protected:
 public:
   virtual void Setup_Quadrature();
   virtual void Print_Quadrature_Info();
@@ -47,6 +53,8 @@ Quadrature :: ~Quadrature(){
   delete [] QW;
   delete [] QXi;
   delete [] QEta;
+  delete [] mapping_data;
+  delete [] mapping;
 }
 
 
@@ -55,6 +63,11 @@ void Quadrature_2PQuad4 :: Setup_Quadrature(){
   QW = new double [4];
   QXi = new double [4];
   QEta = new double [4];
+  mapping_data = new double [16];
+  mapping = new double* [4];
+  for(int i = 0; i < 4; i++){
+    mapping[i] = &mapping_data[i*4];
+  }
 
   QW[0] = 1.0;
   QW[1] = 1.0;
@@ -70,6 +83,24 @@ void Quadrature_2PQuad4 :: Setup_Quadrature(){
   QEta[1] = -1.0/sqrt(3);
   QEta[2] =  1.0/sqrt(3);
   QEta[3] =  1.0/sqrt(3);
+
+  // transposed form because of lapack solver
+  mapping[0][0] =  1.0;
+  mapping[1][0] = -1.0;
+  mapping[2][0] = -1.0;
+  mapping[3][0] =  1.0;
+  mapping[0][1] =  1.0;
+  mapping[1][1] =  1.0;
+  mapping[2][1] = -1.0;
+  mapping[3][1] = -1.0;
+  mapping[0][2] =  1.0;
+  mapping[1][2] =  1.0;
+  mapping[2][2] =  1.0;
+  mapping[3][2] =  1.0;
+  mapping[0][3] =  1.0;
+  mapping[1][3] = -1.0;
+  mapping[2][3] =  1.0;
+  mapping[3][3] = -1.0;
 }
 
 void Quadrature_2PQuad4 :: Print_Quadrature_Info(){
@@ -81,8 +112,16 @@ void Quadrature_2PQuad4 :: Print_Quadrature_Info(){
   cout << setw(10) << QXi[0] << setw(10) << QXi[1] << setw(10) << QXi[2] << setw(10) << QXi[3] << endl;
   cout << "Eta:" << endl;
   cout << setw(10) << QEta[0] << setw(10) << QEta[1] << setw(10) << QEta[2] << setw(10) << QEta[3] << endl;
+  cout << "Mapping matrix(Transposed):" << endl;
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 4; j++){
+      cout << setw(10) << mapping[i][j];
+    }
+    cout << endl;
+  }
   cout << endl;
 }
+
 
 
 void Quadrature_3PQuad4 :: Setup_Quadrature(){

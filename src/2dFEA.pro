@@ -8,14 +8,14 @@ SOURCES += main.cpp
 LIBS += -llapack -lblas
 
 QMAKE_CXXFLAGS += -std=c++11
-QMAKE_CXX = mpicxx
+QMAKE_CXX = g++
 
 HEADERS += \
 		mesh.hpp \
 		material.hpp \
-    preprocessor.hpp \
-    quadrature.hpp \
-    element.hpp
+		preprocessor.hpp \
+		quadrature.hpp \
+		element.hpp
 
 OTHER_FILES += \
 		lapac_example.txt

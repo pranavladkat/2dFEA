@@ -13,7 +13,7 @@ private:
   double E; // young's modulus
   double nu; // poisson's ratio
 
-  double Estiff[3][3];
+  double Estiff[3][3];    // Element stiffness
 
 public:
 

@@ -15,7 +15,8 @@ HEADERS += \
 		material.hpp \
 		preprocessor.hpp \
 		quadrature.hpp \
-		element.hpp
+		element.hpp \
+    stiffelement.hpp
 
 OTHER_FILES += \
 		lapac_example.txt

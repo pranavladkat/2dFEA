@@ -67,6 +67,7 @@ private:
   bool set_filename;
   string filename;
   bool isQuadPresent, isTriPresent;
+  double thickness;
 
 public:
 
@@ -77,6 +78,7 @@ public:
   void ReadMeshFile();
   void ValidateMesh();
   void WriteMesh(OUTPUT_MESH_FORMAT const&);
+  void Set_Thickness(double const&);
 
 
 };
@@ -237,6 +239,10 @@ void Mesh::WriteMesh(OUTPUT_MESH_FORMAT const& output_mesh_format){
 
 }  // end writemesh function
 
+
+void Mesh :: Set_Thickness(double const& Thickness){
+  thickness = Thickness;
+}
 
 
 #endif // MESH_HPP

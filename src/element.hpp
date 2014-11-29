@@ -15,45 +15,43 @@ using namespace std;
 
 
 class Element{
-
+  friend class EStiffness;
 protected:
-  double *alpha,*beta;
-  double **Na, *Na_data;
-  double *J;
-  double *dx_dxi, *dx_deta;
-  double *dy_dxi, *dy_deta;
-  double *dxi_dx, *dxi_dy;
-  double *deta_dx, *deta_dy;
+  const Quadrature *Quad;         // quadrature info
+  const Face& face;               // face associated with element
+  double *alpha,*beta;            // mapping coeff to master element
+  double **Na, *Na_data;          // shape function evaluated at quadrature points
+  double *J;                      // jacobian evaluated at quadrature points
+  double *dx_dxi, *dx_deta;       // derivative of x wrt xi and eta evaluated at quadrature points
+  double *dy_dxi, *dy_deta;       // derivative of y wrt xi and eta evaluated at quadrature points
+  double *dxi_dx, *dxi_dy;        // derivative of xi wrt x and y evaluated at quadrature points
+  double *deta_dx, *deta_dy;      // derivative of eta wrt x and y evaluated at quadrature points
 
 public:
 
-  Element();
-
+  Element(Quadrature const* quad, const Face& f);
   virtual ~Element();
 
-  virtual void Element_setup() = 0;
-  virtual void Compute_mapping_coeff() = 0;
+  virtual void Element_setup(vector<Node> const&) = 0;
+  virtual void Compute_mapping_coeff(vector<Node> const&) = 0;
   virtual void Compute_Shape_Function() = 0;
   virtual void Compute_dX_dXI() = 0;
   virtual void Compute_Jacobian() = 0;
   virtual void Compute_dXI_dX() = 0;
-
 
 };
 
 
 
 class Quad4 : public Element{
-
+  friend class EStiffness;
 protected:
-  const Quadrature *Quad;
-  const vector<Node> node;
-  const Face face;
+
 public:
-  Quad4(Quadrature const*, const vector<Node>&, const Face&);
+  Quad4(Quadrature const*, const Face&);
   ~Quad4();
-  virtual void Element_setup();
-  virtual void Compute_mapping_coeff();
+  virtual void Element_setup(vector<Node> const&);
+  virtual void Compute_mapping_coeff(vector<Node> const&);
   virtual void Compute_Shape_Function();
   virtual void Compute_dX_dXI();
   virtual void Compute_Jacobian();
@@ -67,7 +65,9 @@ public:
 
 // Functions
 
-Element::Element(){
+Element::Element(Quadrature const* quad, const Face& f)
+  :Quad(quad), face(f)
+{
   alpha = NULL;
   beta = NULL;
   Na = NULL;
@@ -84,9 +84,8 @@ Element::Element(){
 }
 
 
-
+//free memory
 Element :: ~Element(){
-  //free memory
   if(alpha != NULL){
     delete [] alpha;
   }
@@ -128,8 +127,8 @@ Element :: ~Element(){
   }
 }
 
-Quad4::Quad4(Quadrature const* quad, const vector<Node>& n, const Face& f)
-  :Quad(quad), node(n), face(f)
+Quad4::Quad4(Quadrature const* quad, const Face& f)
+  :Element(quad,f)
 {
   alpha = NULL;
   beta = NULL;
@@ -153,9 +152,9 @@ Quad4::~Quad4(){
 
 
 
-void Quad4 :: Element_setup(){
+void Quad4 :: Element_setup(vector<Node> const& node){
   assert(Quad != NULL);
-  Compute_mapping_coeff();
+  Compute_mapping_coeff(node);
   Compute_Shape_Function();
   Compute_dX_dXI();
   Compute_Jacobian();
@@ -164,7 +163,7 @@ void Quad4 :: Element_setup(){
 
 
 
-void Quad4 :: Compute_mapping_coeff(){
+void Quad4 :: Compute_mapping_coeff(vector<Node> const& node){
 
   int n = Quad->Qpoints(), nrhs = 2;
   int lda = n, ldb = n;

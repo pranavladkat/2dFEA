@@ -12,9 +12,9 @@ typedef enum {Q2D_2point, Q2D_3point} Quadrature_Rule;
 class Quadrature{
 
 protected:
-  int Quadrature_points;
-  double *QW, *QXi, *QEta;
-  double **mapping, *mapping_data;
+  int Quadrature_points;            // number of quadrature points
+  double *QW, *QXi, *QEta;          // quadrature weights and points
+  double **mapping, *mapping_data;  // mapping matrix to compute mapping coeff for each element
 
 public:
   virtual ~Quadrature();

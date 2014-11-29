@@ -21,6 +21,7 @@ int main(int argc, char* argv[]){
   pre.Create_Quadrature_Objects();
 
   pre.Compute_Element_properties();
+  pre.Compute_Element_stiffness();
 
   cout << "Hello Pranav!" << endl;
 

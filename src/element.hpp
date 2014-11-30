@@ -6,6 +6,7 @@
 #include "quadrature.hpp"
 #include "mesh.hpp"
 
+// lapack routine : solves AX = B
 extern "C" {
 void dgesv_(int *n, int *nrhs,  double *a,  int  *lda,
             int *ipivot, double *b, int *ldb, int *info);

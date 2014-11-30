@@ -19,7 +19,7 @@ private:
   Quadrature_Rule QRule;
   Quadrature *Quad_Quad, *Quad_Tri;
   vector<Element*> element;
-  vector<EStiffness> stiffness;
+  vector<EStiffness*> stiffness;
 
 public:
 
@@ -57,6 +57,7 @@ PreProcessor :: ~PreProcessor(){
   }
   for(size_t i = 0; i < element.size(); i++){
     delete element[i];
+    delete stiffness[i];
   }
 }
 
@@ -92,9 +93,14 @@ void PreProcessor :: Compute_Element_properties(){
 
 
 void PreProcessor :: Compute_Element_stiffness(){
-  EStiffness estiff(material,element[0]);
-  estiff.Compute_Element_Stiffness();
-
+  assert(mesh->Get_Thickness() != 0);
+  EStiffness *estiff;
+  for(size_t i = 0; i < mesh->face.size(); i++){
+    estiff= new EStiffness(material,element[i]);
+    estiff->Compute_Element_Stiffness(mesh->Get_Thickness());
+    estiff->Compute_Equation_Number(mesh->face[i].nodes);
+    stiffness.push_back(estiff);
+  }
 }
 
 

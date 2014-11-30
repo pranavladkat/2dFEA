@@ -79,8 +79,7 @@ public:
   void ValidateMesh();
   void WriteMesh(OUTPUT_MESH_FORMAT const&);
   void Set_Thickness(double const&);
-
-
+  double Get_Thickness() const ;
 };
 
 
@@ -242,6 +241,10 @@ void Mesh::WriteMesh(OUTPUT_MESH_FORMAT const& output_mesh_format){
 
 void Mesh :: Set_Thickness(double const& Thickness){
   thickness = Thickness;
+}
+
+double Mesh :: Get_Thickness() const {
+  return thickness;
 }
 
 

@@ -16,7 +16,8 @@ HEADERS += \
 		preprocessor.hpp \
 		quadrature.hpp \
 		element.hpp \
-    stiffelement.hpp
+    stiffelement.hpp \
+    boundarycondition.hpp
 
 OTHER_FILES += \
 		lapac_example.txt

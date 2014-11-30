@@ -9,6 +9,7 @@ int main(int argc, char* argv[]){
 
   Mesh mesh("L-mesh.dat");
   mesh.ReadMeshFile();
+  mesh.Set_Thickness(0.1);
   mesh.ValidateMesh();
   //mesh.WriteMesh(Mesh::MATLAB);
 

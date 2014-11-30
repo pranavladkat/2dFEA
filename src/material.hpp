@@ -13,16 +13,19 @@ private:
   double E; // young's modulus
   double nu; // poisson's ratio
 
-  double Estiff[3][3];    // Element stiffness
+  double **Estiff, *Estiff_data;    // Element stiffness
 
 public:
 
   Material();
+  ~Material();
   Material(double const&,double const&);
   void set_YoungsModulus(double const&);
   void set_PoissonsRatio(double const&);
   void Compute_Elastic_Stiffness();
   void Print_Elastic_Stiffness();
+  double** Get_Element_Stiffness() const {return Estiff;}
+  void Allocate_Estiff();
 
 };
 
@@ -32,11 +35,21 @@ public:
 Material :: Material(){
   E = 0.0;
   nu = 0.0;
+  Allocate_Estiff();
 }
 
 Material :: Material(double const& YoungsMod, double const& PoissonRatio){
   set_YoungsModulus(YoungsMod);
   set_PoissonsRatio(PoissonRatio);
+  Allocate_Estiff();
+}
+
+void Material :: Allocate_Estiff(){
+  Estiff = new double* [3];
+  Estiff_data = new double [9];
+  for(int i = 0; i < 3; i++){
+    Estiff[i] = &Estiff_data[i*3];
+  }
 }
 
 void Material :: set_YoungsModulus(const double & YoungsMod){
@@ -68,6 +81,13 @@ void Material :: Print_Elastic_Stiffness(){
   cout << setw(15) << Estiff[1][0] << setw(15) << Estiff[1][1] << setw(15) << Estiff[1][2] << endl;
   cout << setw(15) << Estiff[2][0] << setw(15) << Estiff[2][1] << setw(15) << Estiff[2][2] << endl;
   cout << endl;
+}
+
+
+
+Material :: ~Material(){
+  delete [] Estiff;
+  delete [] Estiff_data;
 }
 
 

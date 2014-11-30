@@ -79,7 +79,7 @@ void PreProcessor :: Create_Quadrature_Objects(){
 void PreProcessor :: Compute_Element_properties(){
 
   Element *elem;
-  for(size_t i = 0; i <mesh->face.size(); i++){
+  for(size_t i = 0; i < mesh->face.size(); i++){
     if(mesh->face[i].Ftype == Face::QUAD){
       elem = new Quad4(Quad_Quad,mesh->face[i]);
     }
@@ -92,7 +92,8 @@ void PreProcessor :: Compute_Element_properties(){
 
 
 void PreProcessor :: Compute_Element_stiffness(){
-  EStiffness estiff(element[0]);
+  EStiffness estiff(material,element[0]);
+  estiff.Compute_Element_Stiffness();
 
 }
 

@@ -7,6 +7,8 @@ using namespace std;
 
 int main(int argc, char* argv[]){
 
+  PetscInitialize(&argc,&argv,(char*)0,NULL);
+
   Mesh mesh("L-mesh.dat");
   mesh.ReadMeshFile();
   mesh.Set_Thickness(0.1);
@@ -23,8 +25,11 @@ int main(int argc, char* argv[]){
 
   pre.Compute_Element_properties();
   pre.Compute_Element_stiffness();
+  pre.Assemble_Stiffness_Matrix();
 
   cout << "Hello Pranav!" << endl;
+
+  PetscFinalize();
 
   return 0;
 }

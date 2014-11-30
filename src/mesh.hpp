@@ -50,7 +50,6 @@ private:
 
   string name;
   BoundaryType BType;
-  int size;
   vector<int> nodes;
 };
 
@@ -167,6 +166,7 @@ void Mesh::ReadMeshFile(){
 
     if(parameter.compare("#NamedSelection") == 0){
 
+      double size;
       Boundary read_b;
       mfile >> read_b.name;
       string btype;
@@ -178,8 +178,8 @@ void Mesh::ReadMeshFile(){
         cerr << "ERROR in Boundary "<< read_b.name << endl;
       }
 
-      mfile >> read_b.size;
-      for(int i = 0; i < read_b.size; i++){
+      mfile >> size;
+      for(int i = 0; i < size; i++){
         int buf;
         mfile >> buf;
         read_b.nodes.push_back(buf);

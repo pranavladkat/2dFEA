@@ -3,11 +3,13 @@
 
 #include <iostream>
 #include <vector>
+#include "petscksp.h"
 #include "mesh.hpp"
 #include "material.hpp"
 #include "element.hpp"
 #include "quadrature.hpp"
 #include "stiffelement.hpp"
+#include "functions.h"
 
 using namespace std;
 
@@ -20,6 +22,8 @@ private:
   Quadrature *Quad_Quad, *Quad_Tri;
   vector<Element*> element;
   vector<EStiffness*> stiffness;
+  Mat KMat;
+  Vec RHS, Solution;
 
 public:
 
@@ -30,7 +34,7 @@ public:
   void Create_Quadrature_Objects();
   void Compute_Element_properties();
   void Compute_Element_stiffness();
-
+  void Assemble_Stiffness_Matrix();
 
 };
 
@@ -101,6 +105,42 @@ void PreProcessor :: Compute_Element_stiffness(){
     estiff->Compute_Equation_Number(mesh->face[i].nodes);
     stiffness.push_back(estiff);
   }
+}
+
+
+
+void PreProcessor :: Assemble_Stiffness_Matrix(){
+  assert(stiffness.size() != 0);
+  int GDof = 2*mesh->node.size();
+  cout << "GDof = " << GDof << endl;
+
+  /* initialize K matrix */
+  MatCreate(PETSC_COMM_WORLD,&KMat);
+  MatSetSizes(KMat,PETSC_DECIDE,PETSC_DECIDE,GDof,GDof);
+  MatSetFromOptions(KMat);
+  MatSetUp(KMat);
+  MatZeroEntries(KMat);
+  MatAssemblyBegin(KMat,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(KMat,MAT_FINAL_ASSEMBLY);
+
+  for(size_t e = 0; e < element.size(); e++){
+
+    int*  P = stiffness[e]->Get_P();
+    int*  Q = stiffness[e]->Get_Q();
+    double** K = stiffness[e]->Get_K();
+    int K_size = stiffness[e]->Get_K_size();
+
+    for(int z = 0; z < K_size; z++){
+      MatSetValues(KMat,1,&Q[z],K_size,P,K[z],ADD_VALUES);
+    }
+
+  }
+
+  MatAssemblyBegin(KMat,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(KMat,MAT_FINAL_ASSEMBLY);
+
+  //WriteMat(KMat,"KMat");
+
 }
 
 

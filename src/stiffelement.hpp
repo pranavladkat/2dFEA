@@ -16,12 +16,17 @@ private:
   const Material* material;
   const size_t K_size;            // stiffness matrix dimension
   double **K, *K_data;            // element stiffness matrix
-  double *P, *Q;                  // global equation number
+  int *P, *Q;                  // global equation number
 public:
   EStiffness(const Material*,const Element*);
   ~EStiffness();
   void Compute_Element_Stiffness(double const&);
   void Compute_Equation_Number(const vector<int>&);
+  int Get_K_size() const {return K_size;}
+  int* Get_P() const {return P;}
+  int* Get_Q() const {return Q;}
+  double** Get_K() const {return K;}
+
 };
 
 
@@ -33,8 +38,8 @@ EStiffness :: EStiffness(const Material* m,const Element* e)
   : element(e),material(m), K_size(2*e->Quad->Qpoints())
 {
   assert(K_size != 0);
-  P = new double [K_size];
-  Q = new double [K_size];
+  P = new int [K_size];
+  Q = new int [K_size];
   K = new double* [K_size];
   K_data = new double [K_size*K_size];
   for(size_t i = 0; i < K_size; i++){

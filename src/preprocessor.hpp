@@ -14,7 +14,7 @@
 using namespace std;
 
 class PreProcessor{
-
+  friend class FEA_Solver;
 private:
   const Mesh *mesh;
   const Material *material;
@@ -23,7 +23,9 @@ private:
   vector<Element*> element;
   vector<EStiffness*> stiffness;
   Mat KMat;
-  Vec RHS, Solution;
+  Vec RHS;
+  double Point_Load;
+  size_t GDof;
 
 public:
 
@@ -35,7 +37,8 @@ public:
   void Compute_Element_properties();
   void Compute_Element_stiffness();
   void Assemble_Stiffness_Matrix();
-  void Compute_RHS();
+  void Apply_BC();
+  void set_pointload(double);
 
 };
 
@@ -44,6 +47,7 @@ public:
 
 PreProcessor::PreProcessor(Mesh const* msh, Material const* matrl)
   :mesh(msh), material(matrl){
+  GDof = 2*mesh->node.size();
   Quad_Quad = NULL;
   Quad_Tri = NULL;
 }
@@ -64,6 +68,8 @@ PreProcessor :: ~PreProcessor(){
     delete element[i];
     delete stiffness[i];
   }
+  VecDestroy(&RHS);
+  MatDestroy(&KMat);
 }
 
 
@@ -141,69 +147,57 @@ void PreProcessor :: Assemble_Stiffness_Matrix(){
 }
 
 
-void PreProcessor :: Compute_RHS(){
-
-  int GDof = 2*mesh->node.size();
+void PreProcessor :: Apply_BC(){
 
   VecCreate(PETSC_COMM_WORLD,&RHS);
   VecSetSizes(RHS,PETSC_DECIDE,GDof);
   VecSetFromOptions(RHS);
   VecSet(RHS,0.0);
-  VecDuplicate(RHS,&Solution);
+  //VecDuplicate(RHS,&Solution);
 
   PetscReal *_RHS;
   VecGetArray(RHS,&_RHS);
 
-  int BCnode = mesh->boundary[1].nodes[0];
-  int BCP = (BCnode-1)*2 + 1;
-  _RHS[BCP] = -1000.0;
-
+  // apply point load bc
+  for(size_t i = 0; i < mesh->boundary.size(); i++){
+    if(mesh->boundary[i].name == "POINT_LOAD"){
+      int BCnode = mesh->boundary[i].nodes[0];
+      int BCP = (BCnode-1)*2 + 1;
+      _RHS[BCP] = Point_Load;
+    }
+  }
   VecRestoreArray(RHS,&_RHS);
 
-  int bottom_node[mesh->boundary[0].nodes.size()];
-  for(size_t i = 0; i < mesh->boundary[0].nodes.size(); i++){
-    bottom_node[i] = mesh->boundary[0].nodes[i];
+  // apply fixed (zero displacement bc)
+  for(size_t i = 0; i < mesh->boundary.size(); i++){
+    if(mesh->boundary[i].name == "FIXED"){
+
+      int fixed_node[mesh->boundary[i].nodes.size()];
+      for(size_t bc = 0; bc < mesh->boundary[i].nodes.size(); bc++){
+        fixed_node[bc] = mesh->boundary[i].nodes[bc];
+      }
+      // find row number in global stiffness matrix to apply bc
+      int rows[2*mesh->boundary[i].nodes.size()];
+      for(size_t bc = 0; bc < mesh->boundary[i].nodes.size(); bc++){
+        rows[bc*2] = (fixed_node[bc]-1)*2; // u displacement
+        rows[bc*2+1] = rows[bc*2] + 1;     // v displacement
+        //cout << fixed_node[i] << "\t" << rows[i*2] << "\t" << rows[i*2+1] << endl;
+      }
+      // make all entries zero and put 1 on diagonal
+      MatZeroRows(KMat,2*mesh->boundary[i].nodes.size(),rows,1.0,NULL,NULL);
+
+    }
   }
 
-  int rows[2*mesh->boundary[0].nodes.size()];
-  for(size_t i = 0; i < mesh->boundary[0].nodes.size(); i++){
-    rows[i*2] = (bottom_node[i]-1)*2;
-    rows[i*2+1] = rows[i*2] + 1;
-    //cout << bottom_node[i] << "\t" << rows[i*2] << "\t" << rows[i*2+1] << endl;
-  }
-
-
-  MatZeroRows(KMat,2*mesh->boundary[0].nodes.size(),rows,1.0,NULL,NULL);
-
-  WriteMat(KMat,"KMat");
-  WriteVec(RHS,"RHS");
-
-  KSP ksp;
-  int itn;
-  KSPCreate(PETSC_COMM_WORLD,&ksp);
-  KSPSetOperators(ksp,KMat,KMat);
-  KSPSetTolerances(ksp,1.e-12,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
-  KSPSetFromOptions(ksp);
-  KSPSetUp(ksp);
-  KSPSolve(ksp,RHS,Solution);
-  KSPGetIterationNumber(ksp,&itn);
-  PetscPrintf(PETSC_COMM_WORLD,"KSP: %d\n",itn);
-
-  ofstream sol("sol.dat");
-  PetscReal *_sol;
-  VecGetArray(Solution,&_sol);
-  for(int i = 0; i < GDof; i+=2){
-    sol << sqrt(pow(_sol[i],2)+pow(_sol[i+1],2)) << endl;
-  }
-  sol.close();
-  VecRestoreArray(Solution,&_sol);
-
-
-
-  WriteVec(Solution,"solution");
+//  WriteMat(KMat,"KMat");
+//  WriteVec(RHS,"RHS");
 
 }
 
+
+void PreProcessor :: set_pointload(double pl){
+  Point_Load = pl;
+}
 
 
 

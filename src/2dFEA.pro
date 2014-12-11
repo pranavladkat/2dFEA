@@ -29,8 +29,8 @@ HEADERS += \
 		quadrature.hpp \
 		element.hpp \
 		stiffelement.hpp \
-		boundarycondition.hpp \
-    functions.h
+    functions.h \
+    solver.hpp
 
 OTHER_FILES += \
 		lapac_example.txt

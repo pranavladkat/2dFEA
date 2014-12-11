@@ -2,6 +2,7 @@
 #include "mesh.hpp"
 #include "material.hpp"
 #include "preprocessor.hpp"
+#include "solver.hpp"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ int main(int argc, char* argv[]){
   mesh.ValidateMesh();
   mesh.WriteMesh(Mesh::MATLAB);
 
-  Material steel(3E+7,0.3);
+  Material steel(3.0E+7,0.3);
   steel.Compute_Elastic_Stiffness();
   steel.Print_Elastic_Stiffness();
 
@@ -26,10 +27,18 @@ int main(int argc, char* argv[]){
   pre.Compute_Element_properties();
   pre.Compute_Element_stiffness();
   pre.Assemble_Stiffness_Matrix();
-  pre.Compute_RHS();
+  pre.set_pointload(-1000.0);
+  pre.Apply_BC();
 
-  cout << "Hello Pranav!" << endl;
+  FEA_Solver solver(&pre);
+  solver.solve_disp();
+  solver.write_sol_disp();
 
+  cout << "Program Finished!" << endl;
+
+  // call destructor to free PETSc objects before PetscFinalize()
+  pre.~PreProcessor();
+  solver.~FEA_Solver();
   PetscFinalize();
 
   return 0;

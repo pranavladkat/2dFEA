@@ -5,7 +5,13 @@
 
 using namespace std;
 
+typedef enum {DISP,LOAD,PRESSURE} BCType;
+
 class BoundaryCondition{
+
+
+
+
 
 };
 

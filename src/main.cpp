@@ -9,13 +9,13 @@ int main(int argc, char* argv[]){
 
   PetscInitialize(&argc,&argv,(char*)0,NULL);
 
-  Mesh mesh("L-mesh.dat");
+  Mesh mesh("4x4Quad.dat");
   mesh.ReadMeshFile();
   mesh.Set_Thickness(0.1);
   mesh.ValidateMesh();
-  //mesh.WriteMesh(Mesh::MATLAB);
+  mesh.WriteMesh(Mesh::MATLAB);
 
-  Material steel(30E+6,0.25);
+  Material steel(3E+7,0.3);
   steel.Compute_Elastic_Stiffness();
   steel.Print_Elastic_Stiffness();
 
@@ -26,6 +26,7 @@ int main(int argc, char* argv[]){
   pre.Compute_Element_properties();
   pre.Compute_Element_stiffness();
   pre.Assemble_Stiffness_Matrix();
+  pre.Compute_RHS();
 
   cout << "Hello Pranav!" << endl;
 

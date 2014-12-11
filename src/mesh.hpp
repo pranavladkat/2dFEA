@@ -70,7 +70,7 @@ private:
 
 public:
 
-  typedef enum {MATLAB,PLOT3D} OUTPUT_MESH_FORMAT;
+  typedef enum {MATLAB,CSV} OUTPUT_MESH_FORMAT;
   Mesh();
   Mesh(string const&);
   void SetMeshFilename(string const&);
@@ -233,8 +233,23 @@ void Mesh::WriteMesh(OUTPUT_MESH_FORMAT const& output_mesh_format){
       mfile << node[i].z << endl;
     }
     mfile << "];" << endl;
+    mfile.close();
 
   } // end matlab mesh format write
+
+
+  if(output_mesh_format == CSV){
+    ofstream mfile("mesh.csv");
+    assert(mfile.is_open());
+
+    mfile << "x,y,z"<< endl;
+    for(size_t i = 0; i < node.size(); i++){
+      mfile << node[i].x << "," << node[i].y << "," << node[i].z << "," << endl;
+    }
+
+  }
+
+
 
 }  // end writemesh function
 

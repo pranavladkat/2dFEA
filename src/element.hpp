@@ -208,9 +208,20 @@ void Quad4 :: Compute_mapping_coeff(vector<Node> const& node){
   int lda = n, ldb = n;
   int info, ipiv[n];
   double solution[2][n];
-  double **mat = Quad->QMapping();
+  double **Qmat = Quad->QMapping();
+  double *mat = NULL; //Quad->QMapping();
   alpha = new double [n];
   beta = new double [n];
+
+  mat = new double [n*n];
+  memcpy(&mat[0],&Qmat[0][0],n*n*sizeof(double));
+
+//  for(int i = 0; i < 4; i++){
+//    for(int j = 0; j < 4; j++){
+//      cout << setw(12) << mat[i*4+j];
+//    }
+//    cout << endl;
+//  }
 
   // get x and y coordinates of face nodes
   for(int i = 0; i < n; i++){
@@ -219,10 +230,11 @@ void Quad4 :: Compute_mapping_coeff(vector<Node> const& node){
   }
 
   /* solve AX = B using lapack solver */
-  dgesv_(&n, &nrhs, &mat[0][0], &lda, ipiv, &solution[0][0], &ldb, &info);
+  dgesv_(&n, &nrhs, &mat[0], &lda, ipiv, &solution[0][0], &ldb, &info);
   assert(info == 0);
 
   //cout << "Solution: "<< info << endl;
+  //cout << setw(15) << "alpha" << setw(15) << "beta" << endl;
   for(int i = 0; i < n; i++){
     alpha[i] = solution[0][i];
     beta[i] = solution[1][i];
@@ -230,6 +242,7 @@ void Quad4 :: Compute_mapping_coeff(vector<Node> const& node){
   }
   //cout << endl;
 
+  delete [] mat;
 }
 
 
@@ -251,6 +264,7 @@ void Quad4 :: Compute_Shape_Function(){
     Na[2][i] = 0.25*(1.0+QXi[i])*(1.0+QEta[i]);
     Na[3][i] = 0.25*(1.0-QXi[i])*(1.0+QEta[i]);
   }
+
 
 //  cout << "Shape Functions:" << endl;
 //  for(int i = 0; i < n; i++){

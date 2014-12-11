@@ -16,7 +16,7 @@ private:
   const Material* material;
   const size_t K_size;            // stiffness matrix dimension
   double **K, *K_data;            // element stiffness matrix
-  int *P, *Q;                  // global equation number
+  int *P;                  // global equation number
 public:
   EStiffness(const Material*,const Element*);
   ~EStiffness();
@@ -24,7 +24,6 @@ public:
   void Compute_Equation_Number(const vector<int>&);
   int Get_K_size() const {return K_size;}
   int* Get_P() const {return P;}
-  int* Get_Q() const {return Q;}
   double** Get_K() const {return K;}
 
 };
@@ -39,7 +38,6 @@ EStiffness :: EStiffness(const Material* m,const Element* e)
 {
   assert(K_size != 0);
   P = new int [K_size];
-  Q = new int [K_size];
   K = new double* [K_size];
   K_data = new double [K_size*K_size];
   for(size_t i = 0; i < K_size; i++){
@@ -52,7 +50,6 @@ EStiffness :: ~EStiffness(){
   delete [] K_data;
   delete [] K;
   delete [] P;
-  delete [] Q;
 }
 
 
@@ -62,7 +59,7 @@ void EStiffness :: Compute_Element_Stiffness(double const& thickness){
   double** C = material->Get_Element_Stiffness();
   double* QW = element->Quad->QWeights();
   double result[8][3];
-  double beta[4] = {0.0,1.0,1.0,1.0};
+  double beta;
 
   assert(K_size == 8);
   for(size_t z = 0; z < K_size/2; z++){
@@ -95,27 +92,32 @@ void EStiffness :: Compute_Element_Stiffness(double const& thickness){
     B[2][6] = B[1][7];
     B[2][7] = B[0][6];
 
-    //  for(int i = 0; i < 3; i++){
-    //    for(int j = 0; j < 8; j++){
-    //      cout << setw(12) << B[i][j];
-    //    }
-    //    cout << endl;
-    //  }
-    //  cout << endl;
+//    for(int i = 0; i < 3; i++){
+//      for(int j = 0; j < 8; j++){
+//        cout << setw(12) << B[i][j];
+//      }
+//      cout << endl;
+//    }
+//    cout << endl;
 
     double alpha = element->J[z]*thickness*QW[z];
     // matrix multiplication --> result = B(transpose)*C*alpha
     cblas_dgemm(CblasRowMajor,CblasTrans,CblasNoTrans,K_size,3,3,alpha,&B[0][0],K_size,&C[0][0],3,0.0,&result[0][0],3);
 
-    //  for(int i = 0; i < 8; i++){
-    //    for(int j = 0; j < 3; j++){
-    //      cout << setw(15) << result[i][j];
-    //    }
-    //    cout << endl;
-    //  }
+//      for(int i = 0; i < 8; i++){
+//        for(int j = 0; j < 3; j++){
+//          cout << setw(15) << result[i][j];
+//        }
+//        cout << endl;
+//      }
 
-    // matrix multiplication --> K = result*B
-    cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,K_size,K_size,3,1.0,&result[0][0],3,&B[0][0],K_size,beta[z],&K[0][0],K_size);
+    if(z == 0){
+      beta = 0.0;
+    }else if(z > 0){
+      beta = 1.0;
+    }
+    // matrix multiplication --> K = beta*K + result*B
+    cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,K_size,K_size,3,1.0,&result[0][0],3,&B[0][0],K_size,beta,&K[0][0],K_size);
   }
 
 //  for(int i = 0; i < 8; i++){
@@ -130,17 +132,16 @@ void EStiffness :: Compute_Element_Stiffness(double const& thickness){
 
 
 void EStiffness :: Compute_Equation_Number(const vector<int>& node){
-  for(size_t i = 0; i < K_size/2; i++){
+  for(size_t i = 0; i < node.size(); i++){
     P[i*2] = (node[i]-1)*2;
-    Q[i*2] = P[i*2];
     P[i*2+1] = P[i*2] + 1;
-    Q[i*2+1] = Q[i*2] + 1;
   }
 
+//  cout << "Equation Number: " << endl;
 //  for(size_t i = 0; i < K_size; i++){
 //    cout << setw(12) << P[i];
 //  }
-//  cout << endl;
+//  cout << endl << endl;
 
 }
 

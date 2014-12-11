@@ -104,7 +104,6 @@ void Quadrature_2PQuad4 :: Setup_Quadrature(){
 }
 
 void Quadrature_2PQuad4 :: Print_Quadrature_Info(){
-  cout << "Quadrature = 2D Gaussian Quadrature : 4 Points" <<endl;
   cout << "Quadrature points : " << Qpoints() << endl;
   cout << "Weights:" << endl;
   cout << setw(10) << QW[0] << setw(10) << QW[1] << setw(10) << QW[2] << setw(10) << QW[3] << endl;
